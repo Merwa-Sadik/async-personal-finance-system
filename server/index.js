@@ -13,10 +13,19 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
+app.get('/api/health', (_req, res) => {
+	res.json({ status: 'ok' })
+})
+
 app.use('/api/auth', authRoutes)
 app.use('/api/transactions', transactionRoutes)
 app.use('/api/budgets', budgetRoutes)
 app.use('/api/reports', reportRoutes)
+
+app.use((err, _req, res, _next) => {
+	console.error(err)
+	res.status(500).json({ message: 'Internal server error' })
+})
 
 const PORT = process.env.PORT || 5000
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
