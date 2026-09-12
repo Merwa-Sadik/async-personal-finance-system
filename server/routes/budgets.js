@@ -27,4 +27,29 @@ router.post('/', async (req, res) => {
 	res.status(201).json(rows[0])
 })
 
+router.put('/:id', async (req, res) => {
+	const { category, amount, month, year } = req.body
+	if (!category?.trim() || !Number.isFinite(Number(amount)) || Number(amount) <= 0 || !Number.isInteger(Number(month)) || Number(month) < 1 || Number(month) > 12 || !Number.isInteger(Number(year))) {
+		return res.status(400).json({ message: 'Category, positive amount, valid month, and year are required' })
+	}
+
+	const [result] = await pool.execute(
+		'UPDATE budgets SET category = ?, amount = ?, month = ?, year = ? WHERE id = ? AND user_id = ?',
+		[category.trim(), Number(amount), Number(month), Number(year), req.params.id, req.user.id],
+	)
+	if (!result.affectedRows) return res.status(404).json({ message: 'Budget not found' })
+
+	const [rows] = await pool.execute(
+		'SELECT id, category, amount, month, year, created_at FROM budgets WHERE id = ? AND user_id = ?',
+		[req.params.id, req.user.id],
+	)
+	res.json(rows[0])
+})
+
+router.delete('/:id', async (req, res) => {
+	const [result] = await pool.execute('DELETE FROM budgets WHERE id = ? AND user_id = ?', [req.params.id, req.user.id])
+	if (!result.affectedRows) return res.status(404).json({ message: 'Budget not found' })
+	res.status(204).send()
+})
+
 export default router

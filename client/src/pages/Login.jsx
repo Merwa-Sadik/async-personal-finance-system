@@ -1,12 +1,16 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
 import AuthLayout from '../components/AuthLayout'
+import { authApi } from '../services/api'
+import { useFinance } from '../context/FinanceContext'
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [form, setForm] = useState({ email: '', password: '', remember: false })
   const [errors, setErrors] = useState({})
+  const navigate = useNavigate()
+  const { setUser, refreshData } = useFinance()
 
   const validate = () => {
     const e = {}
@@ -16,12 +20,21 @@ const Login = () => {
     return e
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     const e2 = validate()
     if (Object.keys(e2).length) return setErrors(e2)
     setErrors({})
-    // TODO: call login API
+    try {
+      const { data } = await authApi.login({ email: form.email, password: form.password })
+      localStorage.setItem('finance_token', data.token)
+      localStorage.setItem('finance_user', JSON.stringify(data.user))
+      setUser(data.user)
+      await refreshData()
+      navigate('/')
+    } catch (error) {
+      setErrors({ form: error.response?.data?.message || 'Unable to sign in' })
+    }
   }
 
   const handleChange = (e) => {
@@ -35,6 +48,7 @@ const Login = () => {
       <h1 className="text-2xl font-bold text-[#1e3a5f] text-center">Welcome Back</h1>
       <p className="text-sm text-gray-500 text-center mt-1 mb-7">Sign in to manage your finances</p>
 
+      {errors.form && <p className="text-sm text-red-500 mb-4">{errors.form}</p>}
       <form onSubmit={handleSubmit} noValidate className="space-y-5">
         {/* Email */}
         <div>

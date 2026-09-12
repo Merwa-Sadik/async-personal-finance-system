@@ -1,19 +1,44 @@
 import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 
-const INCOME_CATEGORIES = ['Salary', 'Freelance', 'Investment', 'Business', 'Gift', 'Other']
-const EXPENSE_CATEGORIES = ['Food', 'Transport', 'Housing', 'Health', 'Education', 'Shopping', 'Entertainment', 'Other']
-
-const TransactionModal = ({ isOpen, onClose, onSave, editing, type }) => {
-  const categories = type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES
-  const empty = { description: '', category: categories[0], amount: '', date: '' }
+const TransactionModal = ({ isOpen, onClose, onSave, onAddCategory, editing, type, categories }) => {
+  const typeCategories = categories.filter((category) => category.type === type).map((category) => category.name)
+  const fallbackCategory = type === 'income' ? 'Other' : 'Other'
+  const categoryOptions = typeCategories.length
+    ? [...typeCategories.filter((category) => category !== fallbackCategory), fallbackCategory]
+    : [fallbackCategory]
+  const empty = { description: '', category: categoryOptions[0], amount: '', date: '' }
   const [form, setForm] = useState(empty)
   const [errors, setErrors] = useState({})
+  const [newCategory, setNewCategory] = useState('')
 
   useEffect(() => {
     setForm(editing ? { ...editing } : empty)
     setErrors({})
+    setNewCategory('')
   }, [editing, isOpen])
+
+  const handleCategoryChange = (event) => {
+    if (event.target.value !== '__new__') {
+      handleChange(event)
+      return
+    }
+    setNewCategory('')
+    setForm((current) => ({ ...current, category: '__new__' }))
+  }
+
+  const saveNewCategory = async () => {
+    const name = newCategory.trim()
+    if (!name) return setErrors((current) => ({ ...current, category: 'Enter a category name' }))
+    try {
+      const created = await onAddCategory(name, type)
+      setForm((current) => ({ ...current, category: created.name }))
+      setNewCategory('')
+      setErrors((current) => ({ ...current, category: '' }))
+    } catch (error) {
+      setErrors((current) => ({ ...current, category: error.response?.data?.message || error.message || 'Unable to add category' }))
+    }
+  }
 
   const validate = () => {
     const e = {}
@@ -71,11 +96,25 @@ const TransactionModal = ({ isOpen, onClose, onSave, editing, type }) => {
             <select
               name="category"
               value={form.category}
-              onChange={handleChange}
+              onChange={handleCategoryChange}
               className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#1e3a5f] transition"
             >
-              {categories.map((c) => <option key={c}>{c}</option>)}
+                {categoryOptions.map((c) => <option key={c}>{c}</option>)}
+              <option value="__new__">+ Add new category...</option>
             </select>
+              {form.category === '__new__' && (
+                <div className="flex gap-2 mt-2">
+                  <input
+                    value={newCategory}
+                    onChange={(event) => setNewCategory(event.target.value)}
+                    placeholder={`Enter ${type} category name`}
+                    autoFocus
+                    className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#1e3a5f]"
+                  />
+                  <button type="button" onClick={saveNewCategory} className="rounded-lg bg-[#1e3a5f] px-3 py-2 text-sm font-semibold text-white">Save</button>
+                </div>
+              )}
+            {errors.category && <p className="text-xs text-red-500 mt-1">{errors.category}</p>}
           </div>
 
           {/* Amount */}
