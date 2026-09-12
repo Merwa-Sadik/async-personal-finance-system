@@ -1,11 +1,15 @@
 import { useState } from 'react'
 import { Menu, Search, Bell, LogOut, User } from 'lucide-react'
 import { useFinance } from '../context/FinanceContext'
+import { useNotifications } from '../context/NotificationContext'
 import { useNavigate } from 'react-router-dom'
+import NotificationDropdown from './NotificationDropdown'
 
 const Header = ({ onMenuClick }) => {
   const { user } = useFinance()
+  const { unreadCount } = useNotifications()
   const [profileOpen, setProfileOpen] = useState(false)
+  const [bellOpen, setBellOpen] = useState(false)
   const navigate = useNavigate()
 
   return (
@@ -24,14 +28,26 @@ const Header = ({ onMenuClick }) => {
       </div>
 
       <div className="ml-auto flex items-center gap-3">
-        <button className="relative p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition">
-          <Bell size={18} />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
-        </button>
-
+        {/* Bell */}
         <div className="relative">
           <button
-            onClick={() => setProfileOpen((p) => !p)}
+            onClick={() => { setBellOpen((p) => !p); setProfileOpen(false) }}
+            className="relative p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition"
+          >
+            <Bell size={18} />
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </button>
+          {bellOpen && <NotificationDropdown onClose={() => setBellOpen(false)} />}
+        </div>
+
+        {/* Profile */}
+        <div className="relative">
+          <button
+            onClick={() => { setProfileOpen((p) => !p); setBellOpen(false) }}
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition"
           >
             <div className="w-7 h-7 rounded-full bg-[#1e3a5f] flex items-center justify-center">

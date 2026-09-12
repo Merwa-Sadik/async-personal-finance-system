@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, TrendingUp, TrendingDown, ArrowLeftRight, PieChart, BarChart2, UserCircle, X } from 'lucide-react'
+import { LayoutDashboard, TrendingUp, TrendingDown, ArrowLeftRight, PieChart, BarChart2, UserCircle, Bell, X } from 'lucide-react'
+import { useNotifications } from '../context/NotificationContext'
 
 const links = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -8,19 +9,20 @@ const links = [
   { to: '/transactions', icon: ArrowLeftRight, label: 'Transactions' },
   { to: '/budgets', icon: PieChart, label: 'Budgets' },
   { to: '/reports', icon: BarChart2, label: 'Reports' },
+  { to: '/notifications', icon: Bell, label: 'Notifications', badge: true },
   { to: '/profile', icon: UserCircle, label: 'Profile' },
 ]
 
 const Sidebar = ({ open, onClose }) => {
+  const { unreadCount } = useNotifications()
+
   return (
     <>
-      {/* Overlay for mobile */}
       {open && <div className="fixed inset-0 z-20 bg-black/30 lg:hidden" onClick={onClose} />}
 
       <aside className={`fixed top-0 left-0 z-30 h-full w-60 bg-[#1e3a5f] flex flex-col transition-transform duration-300
         ${open ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:z-auto`}>
 
-        {/* Logo */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
@@ -33,9 +35,8 @@ const Sidebar = ({ open, onClose }) => {
           </button>
         </div>
 
-        {/* Nav */}
         <nav className="flex-1 px-3 py-5 space-y-1">
-          {links.map(({ to, icon: Icon, label }) => (
+          {links.map(({ to, icon: Icon, label, badge }) => (
             <NavLink
               key={to}
               to={to}
@@ -47,7 +48,12 @@ const Sidebar = ({ open, onClose }) => {
               }
             >
               <Icon size={18} />
-              {label}
+              <span className="flex-1">{label}</span>
+              {badge && unreadCount > 0 && (
+                <span className="text-[10px] bg-red-500 text-white font-bold px-1.5 py-0.5 rounded-full">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>

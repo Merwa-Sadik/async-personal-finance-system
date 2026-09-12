@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { FinanceProvider } from './context/FinanceContext'
+import { NotificationProvider } from './context/NotificationContext'
 import Layout from './components/Layout'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -9,8 +10,8 @@ import Expense from './pages/Expense'
 import Transactions from './pages/Transactions'
 import Budgets from './pages/Budgets'
 import Reports from './pages/Reports'
-
 import Profile from './pages/Profile'
+import Notifications from './pages/Notifications'
 
 const AppRoutes = () => (
   <Routes>
@@ -23,6 +24,7 @@ const AppRoutes = () => (
     <Route path="/budgets" element={<Layout><Budgets /></Layout>} />
     <Route path="/reports" element={<Layout><Reports /></Layout>} />
     <Route path="/profile" element={<Layout><Profile /></Layout>} />
+    <Route path="/notifications" element={<Layout><Notifications /></Layout>} />
   </Routes>
 )
 
@@ -30,7 +32,9 @@ function App() {
   return (
     <BrowserRouter>
       <FinanceProvider>
-        <AppRoutes />
+        <NotificationProvider>
+          <AppRoutes />
+        </NotificationProvider>
       </FinanceProvider>
     </BrowserRouter>
   )
