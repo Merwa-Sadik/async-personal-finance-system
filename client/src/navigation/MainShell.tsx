@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import DashboardScreen from '../screens/Dashboard';
 import IncomeScreen from '../screens/Income';
 import ExpenseScreen from '../screens/Expense';
 import NotificationsScreen from '../screens/Notifications';
 import ProfileScreen from '../screens/Profile';
+import SettingsScreen from '../screens/Settings';
 import { useFinance } from '../context/FinanceContext';
+import { RootStackParamList } from '../types';
 
-type Page = 'Dashboard' | 'Income' | 'Expenses' | 'Notifications' | 'Profile';
+type Page = 'Dashboard' | 'Income' | 'Expenses' | 'Notifications' | 'Profile' | 'Settings';
+type Props = { navigation: NativeStackNavigationProp<RootStackParamList, 'Main'> };
 const items: { page: Page; icon: string; label: string }[] = [
   { page: 'Dashboard', icon: '▦', label: 'Dashboard' },
   { page: 'Income', icon: '↗', label: 'Income' },
@@ -15,14 +19,51 @@ const items: { page: Page; icon: string; label: string }[] = [
   { page: 'Notifications', icon: '◌', label: 'Notifications' },
 ];
 
-export default function MainShell() {
+export default function MainShell({ navigation }: Props) {
   const [page, setPage] = useState<Page>('Dashboard');
   const [collapsed, setCollapsed] = useState(false);
-  const { user, notifications } = useFinance();
+  const [search, setSearch] = useState('');
+  const { user, notifications, theme } = useFinance();
   const { width } = useWindowDimensions();
   const mobile = width < 760;
-  const renderPage = () => page === 'Dashboard' ? <DashboardScreen /> : page === 'Income' ? <IncomeScreen /> : page === 'Expenses' ? <ExpenseScreen /> : page === 'Notifications' ? <NotificationsScreen /> : <ProfileScreen />;
-  return <SafeAreaView style={styles.root}><View style={styles.app}><View style={[styles.sidebar, (collapsed || mobile) && styles.sidebarSmall]}><View style={styles.brandRow}><View style={styles.logo}><Text style={styles.logoText}>PF</Text></View>{!collapsed && !mobile && <View><Text style={styles.brand}>PFMS</Text><Text style={styles.brandSub}>Personal Finance</Text></View>}</View><View style={styles.nav}>{items.map((item) => <TouchableOpacity key={item.page} onPress={() => setPage(item.page)} style={[styles.navItem, page === item.page && styles.navActive]}><Text style={[styles.navIcon, page === item.page && styles.navIconActive]}>{item.icon}</Text>{!collapsed && !mobile && <Text style={[styles.navText, page === item.page && styles.navTextActive]}>{item.label}</Text>}</TouchableOpacity>)}</View><View style={styles.bottomNav}><TouchableOpacity onPress={() => setPage('Profile')} style={[styles.navItem, page === 'Profile' && styles.navActive]}><Text style={styles.navIcon}>◉</Text>{!collapsed && !mobile && <Text style={styles.navText}>Profile</Text>}</TouchableOpacity><TouchableOpacity style={styles.navItem}><Text style={styles.navIcon}>⚙</Text>{!collapsed && !mobile && <Text style={styles.navText}>Settings</Text>}</TouchableOpacity><TouchableOpacity style={styles.navItem}><Text style={styles.navIcon}>↪</Text>{!collapsed && !mobile && <Text style={styles.navText}>Logout</Text>}</TouchableOpacity></View></View><View style={styles.main}><View style={styles.header}><View style={styles.headerLeft}><TouchableOpacity onPress={() => setCollapsed(!collapsed)} style={styles.menu}><Text style={styles.menuText}>☰</Text></TouchableOpacity><Text style={styles.pageTitle}>{page}</Text></View><View style={styles.headerRight}><TextInput style={styles.search} placeholder="Search" placeholderTextColor="#94a3b8"/><TouchableOpacity onPress={() => setPage('Notifications')} style={styles.bell}><Text style={styles.bellText}>◌</Text>{notifications.some((item) => !item.read) && <View style={styles.badge} />}</TouchableOpacity><TouchableOpacity onPress={() => setPage('Profile')} style={styles.user}><View style={styles.userAvatar}><Text style={styles.userInitial}>{user.name.charAt(0)}</Text></View><Text style={styles.userName}>{user.name}</Text></TouchableOpacity></View></View><View style={styles.body}>{renderPage()}</View></View></View></SafeAreaView>;
+  const dark = theme === 'dark';
+  const renderPage = () => {
+    if (page === 'Dashboard') return <DashboardScreen />;
+    if (page === 'Income') return <IncomeScreen />;
+    if (page === 'Expenses') return <ExpenseScreen />;
+    if (page === 'Notifications') return <NotificationsScreen />;
+    if (page === 'Profile') return <ProfileScreen />;
+    return <SettingsScreen />;
+  };
+  const logout = () => navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+
+  return (
+    <SafeAreaView style={[styles.root, dark && styles.darkRoot]}>
+      <View style={styles.app}>
+        <View style={[styles.sidebar, dark && styles.darkSurface, (collapsed || mobile) && styles.sidebarSmall]}>
+          <View style={styles.brandRow}>
+            <View style={styles.logo}><Text style={styles.logoText}>PF</Text></View>
+            {!collapsed && !mobile && <View><Text style={styles.brand}>PFMS</Text><Text style={styles.brandSub}>Personal Finance</Text></View>}
+          </View>
+          <View style={styles.nav}>
+            {items.map((item) => <TouchableOpacity key={item.page} onPress={() => setPage(item.page)} style={[styles.navItem, page === item.page && styles.navActive]} accessibilityRole="button" accessibilityLabel={item.label}><Text style={[styles.navIcon, page === item.page && styles.navIconActive]}>{item.icon}</Text>{!collapsed && !mobile && <Text style={[styles.navText, page === item.page && styles.navTextActive]}>{item.label}</Text>}</TouchableOpacity>)}
+          </View>
+          <View style={styles.bottomNav}>
+            <TouchableOpacity onPress={() => setPage('Profile')} style={[styles.navItem, page === 'Profile' && styles.navActive]}><Text style={styles.navIcon}>◉</Text>{!collapsed && !mobile && <Text style={styles.navText}>Profile</Text>}</TouchableOpacity>
+            <TouchableOpacity onPress={() => setPage('Settings')} style={[styles.navItem, page === 'Settings' && styles.navActive]}><Text style={styles.navIcon}>⚙</Text>{!collapsed && !mobile && <Text style={styles.navText}>Settings</Text>}</TouchableOpacity>
+            <TouchableOpacity onPress={logout} style={styles.navItem}><Text style={styles.navIcon}>↪</Text>{!collapsed && !mobile && <Text style={styles.navText}>Logout</Text>}</TouchableOpacity>
+          </View>
+        </View>
+        <View style={styles.main}>
+          <View style={[styles.header, dark && styles.darkSurface]}>
+            <View style={styles.headerLeft}><TouchableOpacity onPress={() => setCollapsed((value) => !value)} style={styles.menu} accessibilityLabel="Toggle sidebar"><Text style={styles.menuText}>☰</Text></TouchableOpacity><Text style={[styles.pageTitle, dark && styles.darkText]}>{page}</Text></View>
+            <View style={styles.headerRight}><TextInput value={search} onChangeText={setSearch} style={[styles.search, dark && styles.darkInput]} placeholder="Search" placeholderTextColor="#94a3b8" accessibilityLabel="Search finance app" /><TouchableOpacity onPress={() => setPage('Notifications')} style={styles.bell} accessibilityLabel="Open notifications"><Text style={styles.bellText}>◌</Text>{notifications.some((item) => !item.read) && <View style={styles.badge} />}</TouchableOpacity><TouchableOpacity onPress={() => setPage('Profile')} style={styles.user} accessibilityLabel="Open profile"><View style={styles.userAvatar}><Text style={styles.userInitial}>{user.name.charAt(0)}</Text></View><Text style={[styles.userName, dark && styles.darkText]}>{user.name}</Text></TouchableOpacity></View>
+          </View>
+          <View style={styles.body}>{renderPage()}</View>
+        </View>
+      </View>
+    </SafeAreaView>
+  );
 }
 
-const styles = StyleSheet.create({ root: { flex: 1, backgroundColor: '#f5f6f8' }, app: { flex: 1, flexDirection: 'row' }, sidebar: { width: 248, backgroundColor: '#fff', borderRightWidth: 1, borderRightColor: '#e6eaf0', paddingHorizontal: 18, paddingVertical: 24 }, sidebarSmall: { width: 70, paddingHorizontal: 10 }, brandRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 8, marginBottom: 42 }, logo: { width: 38, height: 38, borderRadius: 11, backgroundColor: '#14213d', alignItems: 'center', justifyContent: 'center' }, logoText: { color: '#fff', fontWeight: '800', fontSize: 14 }, brand: { color: '#14213d', fontWeight: '900', fontSize: 17 }, brandSub: { color: '#94a3b8', fontSize: 10, marginTop: 2 }, nav: { gap: 7 }, navItem: { flexDirection: 'row', alignItems: 'center', gap: 13, paddingVertical: 12, paddingHorizontal: 12, borderRadius: 9 }, navActive: { backgroundColor: '#edf3ff' }, navIcon: { color: '#64748b', width: 20, textAlign: 'center', fontSize: 17 }, navIconActive: { color: '#4f7cff' }, navText: { color: '#64748b', fontSize: 13, fontWeight: '600' }, navTextActive: { color: '#315dcc', fontWeight: '800' }, bottomNav: { marginTop: 'auto', gap: 7 }, main: { flex: 1, minWidth: 0 }, header: { height: 76, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#e6eaf0', paddingHorizontal: 28, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 15 }, menu: { padding: 5 }, menuText: { color: '#64748b', fontSize: 20 }, pageTitle: { color: '#14213d', fontSize: 20, fontWeight: '800' }, headerRight: { flexDirection: 'row', alignItems: 'center', gap: 18 }, search: { width: 190, height: 38, backgroundColor: '#f5f6f8', borderRadius: 9, paddingHorizontal: 13, color: '#14213d', fontSize: 13 }, bell: { position: 'relative', padding: 7 }, bellText: { color: '#64748b', fontSize: 22 }, badge: { position: 'absolute', top: 4, right: 3, width: 7, height: 7, borderRadius: 5, backgroundColor: '#ef6b6b' }, user: { flexDirection: 'row', alignItems: 'center', gap: 9 }, userAvatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#dbe4ff', alignItems: 'center', justifyContent: 'center' }, userInitial: { color: '#315dcc', fontWeight: '800' }, userName: { color: '#334155', fontSize: 13, fontWeight: '700' }, body: { flex: 1, minWidth: 0 } });
+const styles = StyleSheet.create({ root: { flex: 1, backgroundColor: '#f5f6f8' }, darkRoot: { backgroundColor: '#0f172a' }, app: { flex: 1, flexDirection: 'row' }, sidebar: { width: 248, backgroundColor: '#fff', borderRightWidth: 1, borderRightColor: '#e6eaf0', paddingHorizontal: 18, paddingVertical: 24 }, darkSurface: { backgroundColor: '#111c31', borderColor: '#263653' }, sidebarSmall: { width: 70, paddingHorizontal: 10 }, brandRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 8, marginBottom: 42 }, logo: { width: 38, height: 38, borderRadius: 11, backgroundColor: '#14213d', alignItems: 'center', justifyContent: 'center' }, logoText: { color: '#fff', fontWeight: '800', fontSize: 14 }, brand: { color: '#14213d', fontWeight: '900', fontSize: 17 }, brandSub: { color: '#94a3b8', fontSize: 10, marginTop: 2 }, nav: { gap: 7 }, navItem: { flexDirection: 'row', alignItems: 'center', gap: 13, paddingVertical: 12, paddingHorizontal: 12, borderRadius: 9 }, navActive: { backgroundColor: '#edf3ff' }, navIcon: { color: '#64748b', width: 20, textAlign: 'center', fontSize: 17 }, navIconActive: { color: '#4f7cff' }, navText: { color: '#64748b', fontSize: 13, fontWeight: '600' }, navTextActive: { color: '#315dcc', fontWeight: '800' }, bottomNav: { marginTop: 'auto', gap: 7 }, main: { flex: 1, minWidth: 0 }, header: { minHeight: 76, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#e6eaf0', paddingHorizontal: 28, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 16 }, headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 15 }, menu: { padding: 5 }, menuText: { color: '#64748b', fontSize: 20 }, pageTitle: { color: '#14213d', fontSize: 20, fontWeight: '800' }, darkText: { color: '#f8fafc' }, headerRight: { flexDirection: 'row', alignItems: 'center', gap: 18 }, search: { width: 190, height: 38, backgroundColor: '#f5f6f8', borderRadius: 9, paddingHorizontal: 13, color: '#14213d', fontSize: 13 }, darkInput: { backgroundColor: '#1e293b', color: '#f8fafc' }, bell: { position: 'relative', padding: 7 }, bellText: { color: '#64748b', fontSize: 22 }, badge: { position: 'absolute', top: 4, right: 3, width: 7, height: 7, borderRadius: 5, backgroundColor: '#ef6b6b' }, user: { flexDirection: 'row', alignItems: 'center', gap: 9 }, userAvatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#dbe4ff', alignItems: 'center', justifyContent: 'center' }, userInitial: { color: '#315dcc', fontWeight: '800' }, userName: { color: '#334155', fontSize: 13, fontWeight: '700' }, body: { flex: 1, minWidth: 0 } });

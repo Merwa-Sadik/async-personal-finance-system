@@ -138,9 +138,6 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 <Text style={styles.rememberText}>Remember me</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity activeOpacity={0.7}>
-                <Text style={styles.linkText}>Forgot password?</Text>
-              </TouchableOpacity>
             </View>
 
             <TouchableOpacity style={styles.primaryButton} onPress={handleSubmit} activeOpacity={0.9}>

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState } from 'react'
-import { Income, Expense, Budget, Notification, User } from '../types'
+import { Income, Expense, Budget, Notification, ThemeMode, User } from '../types'
 
 interface FinanceContextType {
   income: Income[]
@@ -12,6 +12,8 @@ interface FinanceContextType {
   setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>
   user: User
   setUser: React.Dispatch<React.SetStateAction<User>>
+  theme: ThemeMode
+  setTheme: React.Dispatch<React.SetStateAction<ThemeMode>>
 }
 
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined)
@@ -69,9 +71,10 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     budgetAlerts: true,
     memberSince: '2024-01-15',
   })
+  const [theme, setTheme] = useState<ThemeMode>('light')
 
   return (
-    <FinanceContext.Provider value={{ income, setIncome, expenses, setExpenses, budgets, setBudgets, notifications, setNotifications, user, setUser }}>
+    <FinanceContext.Provider value={{ income, setIncome, expenses, setExpenses, budgets, setBudgets, notifications, setNotifications, user, setUser, theme, setTheme }}>
       {children}
     </FinanceContext.Provider>
   )

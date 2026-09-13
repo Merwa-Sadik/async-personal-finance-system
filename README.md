@@ -15,6 +15,7 @@ A full-stack personal finance management system with a responsive PFMS dashboard
 - Add income and add expense modal popups
 - Delete income and expense entries
 - Responsive layouts for desktop, tablet, and mobile sizes
+- Light and dark appearance modes from Settings
 
 ## Tech Stack
 
@@ -40,7 +41,8 @@ async-personal-finance-system/
 │       │   ├── Income.tsx
 │       │   ├── Expense.tsx
 │       │   ├── Notifications.tsx
-│       │   └── Profile.tsx
+│       │   ├── Profile.tsx
+│       │   └── Settings.tsx
 │       └── types/index.ts
 ├── server/                         # Express API and MySQL integration
 │   ├── config/db.js

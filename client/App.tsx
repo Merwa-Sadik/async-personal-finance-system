@@ -4,7 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 import LoginScreen from './src/screens/Login';
 import RegisterScreen from './src/screens/Register';
-import MainShell from './src/navigation/MainShell';
+import { MainShell } from './src/navigation';
 import { FinanceProvider } from './src/context/FinanceContext';
 import { RootStackParamList } from './src/types';
 

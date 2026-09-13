@@ -1,6 +1,8 @@
 
 export type TransactionType = 'income' | 'expense'
 
+export type ThemeMode = 'light' | 'dark'
+
 export interface Transaction {
   id: number
   description: string
