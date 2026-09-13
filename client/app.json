@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "name": "Personal Finance Manager",
+    "slug": "personal-finance-manager",
+    "version": "1.0.0",
+    "orientation": "default",
+    "userInterfaceStyle": "light",
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}

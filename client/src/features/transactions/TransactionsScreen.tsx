@@ -81,7 +81,7 @@ export function TransactionsScreen() {
         <TextInput value={query} onChangeText={setQuery} placeholder="Search transactions..." placeholderTextColor={colors.mutedText} style={styles.search} />
       </View>
       <View style={styles.filters}>
-        <SelectField label="Type" value={typeFilter} options={[{ label: 'All Types', value: 'all' }, { label: 'Income', value: 'income' }, { label: 'Expense', value: 'expense' }]} onChange={setTypeFilter} />
+        <SelectField label="Type" value={typeFilter} options={[{ label: 'All Types', value: 'all' }, { label: 'Income', value: 'income' }, { label: 'Expense', value: 'expense' }]} onChange={(value) => setTypeFilter(value as FilterType)} />
         <SelectField label="Category" value={categoryFilter} options={categoryOptions} onChange={setCategoryFilter} />
       </View>
       {isLoading ? <LoadingState /> : filteredTransactions.length === 0 ? <EmptyState title="No transactions found" description="Add your first transaction or adjust your filters." action={<Button label="Add transaction" onPress={openCreate} />} /> : (

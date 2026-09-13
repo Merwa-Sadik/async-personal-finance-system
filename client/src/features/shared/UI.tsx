@@ -8,19 +8,27 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { colors, radii, spacing } from './theme';
 
 export function ScreenShell({ title, subtitle, action, children }: { title: string; subtitle: string; action?: ReactNode; children: ReactNode }) {
+  const { width } = useWindowDimensions();
+  const isMobile = width < 768;
+
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.screenContent} keyboardShouldPersistTaps="handled">
-      <View style={styles.header}>
+    <ScrollView
+      style={[styles.screen, isMobile && styles.mobileScreen]}
+      contentContainerStyle={[styles.screenContent, isMobile && styles.mobileScreenContent]}
+      keyboardShouldPersistTaps="handled"
+    >
+      <View style={[styles.header, isMobile && styles.mobileHeader]}>
         <View style={styles.headerCopy}>
-          <Text style={styles.title}>{title}</Text>
+          <Text style={[styles.title, isMobile && styles.mobileTitle]}>{title}</Text>
           <Text style={styles.subtitle}>{subtitle}</Text>
         </View>
-        {action}
+        {action ? <View style={isMobile ? styles.mobileAction : undefined}>{action}</View> : null}
       </View>
       {children}
     </ScrollView>
@@ -117,6 +125,11 @@ const styles = StyleSheet.create({
   headerCopy: { flex: 1, paddingRight: spacing.md },
   title: { color: colors.text, fontSize: 28, fontWeight: '700' },
   subtitle: { color: colors.mutedText, fontSize: 14, marginTop: spacing.xs },
+  mobileScreen: { backgroundColor: colors.white },
+  mobileScreenContent: { padding: spacing.md, paddingBottom: 28 },
+  mobileHeader: { marginBottom: spacing.md },
+  mobileTitle: { fontSize: 22 },
+  mobileAction: { alignSelf: 'stretch', marginTop: spacing.sm },
   button: { minHeight: 42, borderRadius: radii.sm, paddingHorizontal: spacing.md, alignItems: 'center', justifyContent: 'center' },
   button_primary: { backgroundColor: colors.primary },
   button_secondary: { backgroundColor: colors.primarySoft },
