@@ -59,7 +59,8 @@ router.post('/register', async (req, res) => {
       res.status(409).json({ message: 'Email is already registered' })
       return
     }
-    throw error
+    console.error('Registration database error:', error)
+    res.status(503).json({ message: 'Authentication database unavailable. Check MySQL and server/.env.' })
   }
 })
 
@@ -70,15 +71,20 @@ router.post('/login', async (req, res) => {
     return
   }
 
-  const [users] = await pool.execute('SELECT id, name, email, password FROM users WHERE email = ?', [email.trim().toLowerCase()])
-  const user = (users as Array<User & { password: string }>)[0]
-  if (!user || !(await bcrypt.compare(password, user.password))) {
-    res.status(401).json({ message: 'Invalid email or password' })
-    return
-  }
+  try {
+    const [users] = await pool.execute('SELECT id, name, email, password FROM users WHERE email = ?', [email.trim().toLowerCase()])
+    const user = (users as Array<User & { password: string }>)[0]
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      res.status(401).json({ message: 'Invalid email or password' })
+      return
+    }
 
-  const safeUser: User = { id: user.id, name: user.name, email: user.email }
-  res.json({ user: safeUser, token: createToken(safeUser) })
+    const safeUser: User = { id: user.id, name: user.name, email: user.email }
+    res.json({ user: safeUser, token: createToken(safeUser) })
+  } catch (error) {
+    console.error('Login database error:', error)
+    res.status(503).json({ message: 'Authentication database unavailable. Check MySQL and server/.env.' })
+  }
 })
 
 export default router

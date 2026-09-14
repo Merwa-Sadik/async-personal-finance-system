@@ -54,7 +54,7 @@ async-personal-finance-system/
 │   ├── package-lock.json
 │   ├── package.json
 │   ├── schema.sql
-│   └── .env
+│   └── .env.example
 └── mobile/                         # Optional separate mobile project
 ```
 
@@ -129,7 +129,12 @@ Import the schema:
 mysql -u root -p < server/schema.sql
 ```
 
-Create a `server/.env` file:
+Create `server/.env` from the example file:
+
+```bash
+cd server
+copy .env.example .env
+```
 
 ```env
 PORT=5000
@@ -139,6 +144,8 @@ DB_PASSWORD=your_password
 DB_NAME=personal_finance
 JWT_SECRET=your_jwt_secret
 ```
+
+Replace `DB_PASSWORD` with your local MySQL password. Keep `server/.env` private; it is ignored by Git.
 
 ## API Endpoints
 

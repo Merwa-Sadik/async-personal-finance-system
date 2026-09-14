@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useMemo } from 'react'
+import React, { createContext, useContext, useState, useMemo, useEffect } from 'react'
 import { Notification } from '../types'
 import { useFinance } from './FinanceContext'
 
@@ -93,8 +93,12 @@ const generateNotifications = (
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { budgets, expenses, income } = useFinance()
-  const base = useMemo(() => generateNotifications(budgets, expenses, income), [])
+  const base = useMemo(() => generateNotifications(budgets, expenses, income), [budgets, expenses, income])
   const [notifications, setNotifications] = useState<Notification[]>(base)
+
+  useEffect(() => {
+    setNotifications(generateNotifications(budgets, expenses, income))
+  }, [budgets, expenses, income])
 
   const unreadCount = notifications.filter((n) => !n.read).length
   const markRead = (id: string) => setNotifications((p) => p.map((n) => n.id === id ? { ...n, read: true } : n))

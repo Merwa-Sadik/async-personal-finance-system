@@ -1,16 +1,11 @@
 {
   "expo": {
-    "name": "client",
-    "slug": "client",
+    "name": "Personal Finance Manager",
+    "slug": "personal-finance-manager",
     "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "orientation": "default",
     "userInterfaceStyle": "light",
-    "platforms": [
-      "ios",
-      "android",
-      "web"
-    ],
+    "platforms": ["ios", "android", "web"],
     "ios": {
       "supportsTablet": true
     },
@@ -24,10 +19,9 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
+      "bundler": "metro",
       "favicon": "./assets/favicon.png"
     },
-    "plugins": [
-      "expo-status-bar"
-    ]
+    "plugins": ["expo-status-bar"]
   }
 }
