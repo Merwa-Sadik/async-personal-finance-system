@@ -78,12 +78,61 @@ export const createTransaction = (input: {
   requiresAuth: true,
 })
 
+export const updateTransaction = (id: number, input: {
+  type: TransactionType
+  category: string
+  amount: number
+  description: string
+  date: string
+}): Promise<ApiTransaction> => request(`/transactions/${id}`, {
+  method: 'PUT',
+  body: JSON.stringify(input),
+  requiresAuth: true,
+})
+
 export const removeTransaction = (id: number): Promise<void> => request(`/transactions/${id}`, {
   method: 'DELETE',
   requiresAuth: true,
 })
 
 export const getBudgets = (): Promise<Budget[]> => request('/budgets', { requiresAuth: true })
+
+export const createBudget = (input: {
+  category: string
+  amount: number
+  month: number
+  year: number
+}): Promise<Budget> => request('/budgets', {
+  method: 'POST',
+  body: JSON.stringify(input),
+  requiresAuth: true,
+})
+
+export const updateBudget = (id: number, input: {
+  category: string
+  amount: number
+  month: number
+  year: number
+}): Promise<Budget> => request(`/budgets/${id}`, {
+  method: 'PUT',
+  body: JSON.stringify(input),
+  requiresAuth: true,
+})
+
+export const removeBudget = (id: number): Promise<void> => request(`/budgets/${id}`, {
+  method: 'DELETE',
+  requiresAuth: true,
+})
+
+export type ReportSummary = {
+  totalIncome: number
+  totalExpenses: number
+  balance: number
+  byCategory: { category: string; type: string; total: number | string }[]
+}
+
+export const getReportSummary = (period?: string): Promise<ReportSummary> =>
+  request(`/reports/summary${period ? `?period=${period}` : ''}`, { requiresAuth: true })
 
 const toUser = (user: AuthResponse['user']): User => ({
   id: user.id,
