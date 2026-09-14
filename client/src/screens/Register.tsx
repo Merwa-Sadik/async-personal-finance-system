@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
+import { register } from '../api';
+import { useFinance } from '../context/FinanceContext';
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList, 'Register'> };
 
@@ -38,6 +40,8 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
     password?: string;
     confirmPassword?: string;
   }>({});
+  const [requestError, setRequestError] = useState('');
+  const { setUser } = useFinance();
 
   const validate = () => {
     const nextErrors: {
@@ -72,7 +76,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
     return nextErrors;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const nextErrors = validate();
 
     if (Object.keys(nextErrors).length > 0) {
@@ -81,7 +85,14 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
     }
 
     setErrors({});
-    navigation.navigate('Login');
+    setRequestError('');
+    try {
+      const user = await register(fullName.trim(), email.trim(), password);
+      setUser(user);
+      navigation.navigate('Main');
+    } catch (error) {
+      setRequestError(error instanceof Error ? error.message : 'Unable to create account');
+    }
   };
 
   return (
@@ -195,6 +206,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
             <TouchableOpacity style={styles.primaryButton} onPress={handleSubmit} activeOpacity={0.9}>
               <Text style={styles.primaryButtonText}>Create Account</Text>
             </TouchableOpacity>
+            {requestError ? <Text style={styles.errorText}>{requestError}</Text> : null}
 
             <View style={styles.footerRow}>
               <Text style={styles.footerText}>Already have an account? </Text>

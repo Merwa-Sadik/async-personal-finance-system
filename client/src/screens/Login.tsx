@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
+import { login } from '../api';
+import { useFinance } from '../context/FinanceContext';
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList, 'Login'> };
 
@@ -34,6 +36,8 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [requestError, setRequestError] = useState('');
+  const { setUser } = useFinance();
 
   const validate = () => {
     const nextErrors: { email?: string; password?: string } = {};
@@ -51,7 +55,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     return nextErrors;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const nextErrors = validate();
 
     if (Object.keys(nextErrors).length > 0) {
@@ -60,7 +64,14 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     }
 
     setErrors({});
-    navigation.navigate('Main');
+    setRequestError('');
+    try {
+      const user = await login(email.trim(), password);
+      setUser(user);
+      navigation.navigate('Main');
+    } catch (error) {
+      setRequestError(error instanceof Error ? error.message : 'Unable to sign in');
+    }
   };
 
   return (
@@ -143,6 +154,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
             <TouchableOpacity style={styles.primaryButton} onPress={handleSubmit} activeOpacity={0.9}>
               <Text style={styles.primaryButtonText}>Sign In</Text>
             </TouchableOpacity>
+            {requestError ? <Text style={styles.errorText}>{requestError}</Text> : null}
 
             <View style={styles.footerRow}>
               <Text style={styles.footerText}>Don't have an account? </Text>

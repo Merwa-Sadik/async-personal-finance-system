@@ -36,6 +36,7 @@
     "typescript": "~6.0.3"
   },
   "scripts": {
+    "build": "expo export --platform web",
     "start": "set EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK=1&& expo start",
     "android": "set EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK=1&& expo start --android",
     "ios": "set EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK=1&& expo start --ios",

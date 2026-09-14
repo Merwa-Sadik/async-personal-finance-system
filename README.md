@@ -45,12 +45,16 @@ async-personal-finance-system/
 │       │   └── Settings.tsx
 │       └── types/index.ts
 ├── server/                         # Express API and MySQL integration
-│   ├── config/db.js
-│   ├── controllers/
-│   ├── middleware/
-│   ├── routes/
+│   ├── src/
+│   │   ├── config/db.ts
+│   │   ├── middleware/
+│   │   ├── routes/
+│   │   └── index.ts
+│   ├── tsconfig.json
+│   ├── package-lock.json
+│   ├── package.json
 │   ├── schema.sql
-│   └── package.json
+│   └── .env
 └── mobile/                         # Optional separate mobile project
 ```
 
@@ -122,7 +126,7 @@ CREATE DATABASE personal_finance;
 Import the schema:
 
 ```bash
-mysql -u root -p personal_finance < server/schema.sql
+mysql -u root -p < server/schema.sql
 ```
 
 Create a `server/.env` file:
