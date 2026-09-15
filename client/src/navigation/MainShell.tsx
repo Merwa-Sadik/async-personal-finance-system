@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { Dimensions, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import DashboardScreen from '../screens/Dashboard';
 import IncomeScreen from '../screens/Income';
 import ExpenseScreen from '../screens/Expense';
@@ -12,6 +12,7 @@ import { ReportsScreen } from '../features/reports';
 import { BudgetScreen } from '../features/budget';
 import { CategoriesScreen } from '../features/categories';
 import { useFinance } from '../context/FinanceContext';
+import { useNotifications } from '../context/NotificationContext';
 import { RootStackParamList } from '../types';
 import { logout as apiLogout } from '../api';
 
@@ -34,7 +35,8 @@ export default function MainShell({ navigation }: Props) {
   const [collapsed, setCollapsed] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const { user, notifications, theme } = useFinance();
+  const { user, theme } = useFinance();
+  const { notifications, unreadCount } = useNotifications();
   const mobile = useWindowDimensions().width < 600;
   const dark = theme === 'dark';
 
@@ -44,8 +46,6 @@ export default function MainShell({ navigation }: Props) {
     await apiLogout();
     navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
   };
-
-  const unreadCount = notifications.filter((n) => !n.read).length;
 
   const content =
     page === 'Dashboard'    ? <DashboardScreen /> :
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
   // Sidebar
   sidebar: { width: 248, backgroundColor: '#fff', borderRightWidth: 1, borderRightColor: '#e6eaf0', paddingHorizontal: 18, paddingVertical: 24 },
   sidebarCollapsed: { width: 60, paddingHorizontal: 8, paddingVertical: 14 },
-  mobileDrawer: { width: 268, height: '100%', borderRightWidth: 0, shadowColor: '#0f172a', shadowOpacity: 0.2, shadowRadius: 18, shadowOffset: { width: 8, height: 0 }, elevation: 12 },
+  mobileDrawer: { width: 268, height: Dimensions.get('window').height, borderRightWidth: 0, shadowColor: '#0f172a', shadowOpacity: 0.2, shadowRadius: 18, shadowOffset: { width: 8, height: 0 }, elevation: 12 },
   drawerLayer: { position: 'absolute', top: 0, bottom: 0, left: 0, zIndex: 20 },
   drawerBackdrop: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, zIndex: 10, backgroundColor: 'rgba(15,23,42,0.42)' },
   darkSurface: { backgroundColor: '#111c31', borderColor: '#263653' },

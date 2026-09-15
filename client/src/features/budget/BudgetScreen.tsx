@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
-import { createBudget, getBudgets, removeBudget, updateBudget } from '../../api';
+import { useMemo, useState } from 'react';
+import { Alert, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { createBudget, removeBudget, updateBudget } from '../../api';
+import { useFinance } from '../../context/FinanceContext';
 import { Button, EmptyState, Field, LoadingState, ModalCard, ProgressBar, ScreenShell, SectionCard, SelectField, StatCard } from '../shared';
 import { colors, formatCurrency, spacing } from '../shared';
 
@@ -10,35 +11,54 @@ const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 
 const EXPENSE_CATEGORIES = ['Food', 'Housing', 'Transport', 'Health', 'Education', 'Entertainment', 'Shopping', 'Other'];
 
 const now = new Date();
-const initialForm = { name: '', category: 'Food', limit: '', month: String(now.getMonth() + 1), year: String(now.getFullYear()) };
+const initialForm = { category: 'Food', limit: '', month: String(now.getMonth() + 1), year: String(now.getFullYear()) };
 
 export function BudgetScreen() {
-  const [budgets, setBudgets] = useState<ApiBudget[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { budgets: rawBudgets, setBudgets: setRawBudgets, expenses, isLoading, error } = useFinance();
+  const mobile = useWindowDimensions().width < 600;
+
+  const budgets: ApiBudget[] = rawBudgets.map((b) => ({
+    id: Number(b.id),
+    category: b.category,
+    amount: Number(b.amount),
+    month: Number(b.month),
+    year: Number(b.year),
+  }));
+
+  const setBudgets = (updater: (cur: ApiBudget[]) => ApiBudget[]) => {
+    setRawBudgets((cur) => updater(cur.map((b) => ({
+      id: Number(b.id), category: b.category, amount: Number(b.amount),
+      month: Number(b.month), year: Number(b.year),
+    }))) as unknown as typeof cur);
+  };
+
+  // Calculate actual spending per budget (matched by category + month + year)
+  const spentMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    expenses.forEach((e) => {
+      const d = new Date(e.date);
+      const key = `${e.category}-${d.getMonth() + 1}-${d.getFullYear()}`;
+      map[key] = (map[key] ?? 0) + e.amount;
+    });
+    return map;
+  }, [expenses]);
+
+  const getSpent = (b: ApiBudget) => spentMap[`${b.category}-${b.month}-${b.year}`] ?? 0;
+
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState(initialForm);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
-  const load = () => {
-    setIsLoading(true);
-    getBudgets()
-      .then((rows) => setBudgets(rows.map((r) => ({ id: Number(r.id), category: r.category, amount: Number(r.amount), month: Number((r as unknown as ApiBudget).month), year: Number((r as unknown as ApiBudget).year) }))))
-      .catch((e: Error) => setError(e.message))
-      .finally(() => setIsLoading(false));
-  };
-
-  useEffect(() => { load(); }, []);
-
-  const totals = useMemo(() => ({ total: budgets.reduce((s, b) => s + b.amount, 0) }), [budgets]);
+  const totalAllocated = useMemo(() => budgets.reduce((s, b) => s + b.amount, 0), [budgets]);
+  const totalSpent = useMemo(() => budgets.reduce((s, b) => s + getSpent(b), 0), [budgets, spentMap]);
 
   const openCreate = () => { setEditingId(null); setForm(initialForm); setFormErrors({}); setIsFormOpen(true); };
 
   const openEdit = (b: ApiBudget) => {
     setEditingId(b.id);
-    setForm({ name: b.category, category: b.category, limit: String(b.amount), month: String(b.month), year: String(b.year) });
+    setForm({ category: b.category, limit: String(b.amount), month: String(b.month), year: String(b.year) });
     setFormErrors({});
     setIsFormOpen(true);
   };
@@ -58,10 +78,12 @@ export function BudgetScreen() {
       const payload = { category: form.category, amount: limit, month, year };
       if (editingId) {
         const updated = await updateBudget(editingId, payload);
-        setBudgets((cur) => cur.map((b) => b.id === editingId ? { id: Number(updated.id), category: updated.category, amount: Number(updated.amount), month: Number((updated as unknown as ApiBudget).month), year: Number((updated as unknown as ApiBudget).year) } : b));
+        const mapped = { id: Number(updated.id), category: updated.category, amount: Number(updated.amount), month: Number((updated as unknown as ApiBudget).month), year: Number((updated as unknown as ApiBudget).year) };
+        setBudgets((cur) => cur.map((b) => b.id === editingId ? mapped : b));
       } else {
         const created = await createBudget(payload);
-        setBudgets((cur) => [{ id: Number(created.id), category: created.category, amount: Number(created.amount), month: Number((created as unknown as ApiBudget).month), year: Number((created as unknown as ApiBudget).year) }, ...cur]);
+        const mapped = { id: Number(created.id), category: created.category, amount: Number(created.amount), month: Number((created as unknown as ApiBudget).month), year: Number((created as unknown as ApiBudget).year) };
+        setBudgets((cur) => [mapped, ...cur]);
       }
       setIsFormOpen(false);
     } catch (e: unknown) {
@@ -90,37 +112,59 @@ export function BudgetScreen() {
 
   return (
     <ScreenShell title="Budgets" subtitle="Plan spending and track progress" action={<Button label="+ Create budget" onPress={openCreate} />}>
-      <View style={styles.stats}>
+      <View style={[styles.stats, mobile && styles.statsMobile]}>
         <StatCard label="Total budgets" value={String(budgets.length)} />
-        <StatCard label="Total allocated" value={formatCurrency(totals.total)} />
+        <StatCard label="Total allocated" value={formatCurrency(totalAllocated)} />
+        <StatCard label="Total spent" value={formatCurrency(totalSpent)} tone={totalSpent > totalAllocated ? 'expense' : 'default'} />
       </View>
+
       {isLoading ? <LoadingState /> : error ? (
-        <EmptyState title="Failed to load" description={error} action={<Button label="Retry" onPress={load} />} />
+        <EmptyState title="Failed to load" description={error} />
       ) : budgets.length === 0 ? (
         <EmptyState title="No budgets yet" description="Create a budget to start tracking your spending." action={<Button label="Create budget" onPress={openCreate} />} />
       ) : (
         <SectionCard title="Budget list">
-          {budgets.map((b) => (
-            <View key={b.id} style={styles.budgetRow}>
-              <View style={styles.budgetHeader}>
-                <View style={styles.budgetNameWrap}>
-                  <Text style={styles.budgetName}>{b.category}</Text>
-                  <Text style={styles.meta}>{MONTHS[b.month - 1]} {b.year}</Text>
+          {budgets.map((b) => {
+            const spent = getSpent(b);
+            const pct = b.amount > 0 ? (spent / b.amount) * 100 : 0;
+            const exceeded = spent > b.amount;
+            const warning = !exceeded && pct >= 80;
+            const barColor = exceeded ? colors.danger : warning ? colors.warning : colors.primary;
+
+            return (
+              <View key={b.id} style={styles.budgetRow}>
+                {/* Header row */}
+                <View style={[styles.budgetHeader, mobile && styles.budgetHeaderMobile]}>
+                  <View style={styles.budgetNameWrap}>
+                    <View style={styles.budgetTitleRow}>
+                      <Text style={styles.budgetName}>{b.category}</Text>
+                      {exceeded && <View style={styles.exceededBadge}><Text style={styles.exceededText}>Exceeded</Text></View>}
+                      {warning && <View style={styles.warningBadge}><Text style={styles.warningText}>Near limit</Text></View>}
+                    </View>
+                    <Text style={styles.meta}>{MONTHS[b.month - 1]} {b.year}</Text>
+                  </View>
+                  <Text style={[styles.budgetAmount, exceeded && { color: colors.danger }]}>{formatCurrency(b.amount)}</Text>
                 </View>
-                <Text style={styles.budgetAmount}>{formatCurrency(b.amount)}</Text>
-              </View>
-              <ProgressBar value={0} tone={colors.primary} />
-              <View style={styles.footer}>
-                <Text style={styles.meta}>Limit: {formatCurrency(b.amount)}</Text>
-                <View style={styles.actions}>
-                  <Pressable onPress={() => openEdit(b)}><Text style={styles.action}>Edit</Text></Pressable>
-                  <Pressable onPress={() => del(b.id)}><Text style={[styles.action, { color: colors.danger }]}>Delete</Text></Pressable>
+
+                {/* Progress bar */}
+                <ProgressBar value={Math.min(pct, 100)} tone={barColor} />
+
+                {/* Footer */}
+                <View style={[styles.footer, mobile && styles.footerMobile]}>
+                  <Text style={styles.meta}>
+                    {formatCurrency(spent)} spent · {formatCurrency(Math.max(b.amount - spent, 0))} left
+                  </Text>
+                  <View style={styles.rowActions}>
+                    <Pressable onPress={() => openEdit(b)}><Text style={styles.action}>Edit</Text></Pressable>
+                    <Pressable onPress={() => del(b.id)}><Text style={[styles.action, { color: colors.danger }]}>Delete</Text></Pressable>
+                  </View>
                 </View>
               </View>
-            </View>
-          ))}
+            );
+          })}
         </SectionCard>
       )}
+
       {isFormOpen ? (
         <ModalCard title={editingId ? 'Edit Budget' : 'Create Budget'} onClose={() => setIsFormOpen(false)}>
           <SelectField label="Category" value={form.category} options={EXPENSE_CATEGORIES.map((c) => ({ label: c, value: c }))} onChange={(category) => setForm((c) => ({ ...c, category }))} error={formErrors.category} />
@@ -137,14 +181,25 @@ export function BudgetScreen() {
 
 const styles = StyleSheet.create({
   stats: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.sm },
+  statsMobile: { flexDirection: 'column' },
+
   budgetRow: { borderBottomColor: colors.border, borderBottomWidth: 1, paddingVertical: spacing.md },
   budgetHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing.sm },
-  budgetNameWrap: { flex: 1 },
+  budgetHeaderMobile: { flexDirection: 'column', gap: 4 },
+  budgetNameWrap: { flex: 1, minWidth: 0 },
+  budgetTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
   budgetName: { color: colors.text, fontSize: 15, fontWeight: '700' },
   budgetAmount: { color: colors.text, fontSize: 15, fontWeight: '700' },
+
+  exceededBadge: { backgroundColor: '#fee2e2', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 },
+  exceededText: { color: colors.danger, fontSize: 11, fontWeight: '700' },
+  warningBadge: { backgroundColor: '#fef3c7', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 },
+  warningText: { color: colors.warning, fontSize: 11, fontWeight: '700' },
+
   meta: { color: colors.mutedText, fontSize: 12, marginTop: 4 },
-  footer: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.sm },
-  actions: { flexDirection: 'row', gap: spacing.sm },
+  footer: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.sm, flexWrap: 'wrap', gap: 6 },
+  footerMobile: { flexDirection: 'column', alignItems: 'flex-start' },
+  rowActions: { flexDirection: 'row', gap: spacing.sm },
   action: { color: colors.primary, fontSize: 12, fontWeight: '700' },
   submitError: { color: colors.danger, fontSize: 12, marginBottom: spacing.sm },
 });

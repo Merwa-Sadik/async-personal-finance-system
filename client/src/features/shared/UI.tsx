@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
   subtitle: { color: colors.mutedText, fontSize: 14, marginTop: spacing.xs },
   mobileScreen: { backgroundColor: colors.white },
   mobileScreenContent: { padding: spacing.md, paddingBottom: 28 },
-  mobileHeader: { marginBottom: spacing.md },
+  mobileHeader: { marginBottom: spacing.md, gap: spacing.sm },
   mobileTitle: { fontSize: 22 },
   mobileAction: { alignSelf: 'stretch', marginTop: spacing.sm },
   button: { minHeight: 42, borderRadius: radii.sm, paddingHorizontal: spacing.md, alignItems: 'center', justifyContent: 'center' },
