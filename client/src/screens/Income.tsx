@@ -164,8 +164,8 @@ const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: '#f5f6f8' },
   content: { padding: 28, gap: 18 },
 
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16 },
-  heading: { fontSize: 28, fontWeight: '800', color: '#14213d' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' },
+  heading: { fontSize: 28, fontWeight: '800', color: '#14213d', flexShrink: 1 },
   subtitle: { color: '#718096', marginTop: 4 },
   addBtn: { backgroundColor: '#14213d', paddingHorizontal: 18, paddingVertical: 12, borderRadius: 10 },
   addBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },

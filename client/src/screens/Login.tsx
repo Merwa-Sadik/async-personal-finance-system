@@ -77,9 +77,9 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior="padding"
     >
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <View style={styles.cardWrap}>
           <View style={styles.card}>
             <View style={styles.logoRow}>
@@ -177,8 +177,8 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 32,
+    paddingHorizontal: 16,
+    paddingVertical: 28,
   },
   cardWrap: {
     alignItems: 'center',
@@ -188,9 +188,9 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 430,
     backgroundColor: colors.white,
-    borderRadius: 28,
+    borderRadius: 24,
     paddingVertical: 28,
-    paddingHorizontal: 22,
+    paddingHorizontal: 20,
     shadowColor: '#0f172a',
     shadowOpacity: 0.08,
     shadowRadius: 18,

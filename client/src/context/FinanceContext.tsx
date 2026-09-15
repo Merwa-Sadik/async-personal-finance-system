@@ -58,7 +58,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       .then(([transactions, nextBudgets]) => {
         setIncome(transactions.filter((item) => item.type === 'income').map(toIncome))
         setExpenses(transactions.filter((item) => item.type === 'expense').map(toExpense))
-        setBudgets(nextBudgets.map((budget) => ({ ...budget, amount: Number(budget.amount) })))
+        setBudgets(nextBudgets.map((budget) => ({ ...budget, amount: Number(budget.amount), month: Number((budget as unknown as { month: number }).month), year: Number((budget as unknown as { year: number }).year) })))
         setError(null)
       })
       .catch((requestError: Error) => setError(requestError.message))

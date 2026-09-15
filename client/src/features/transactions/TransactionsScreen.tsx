@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { createTransaction, removeTransaction, updateTransaction } from '../../api';
 import { useFinance } from '../../context/FinanceContext';
 import { Button, EmptyState, Field, LoadingState, ModalCard, ScreenShell, SectionCard, SelectField } from '../shared';
@@ -17,6 +17,8 @@ const initialForm = { title: '', amount: '', category: 'Food', occurredAt: new D
 
 export function TransactionsScreen() {
   const { income, setIncome, expenses, setExpenses, isLoading, error } = useFinance();
+  const { width } = useWindowDimensions();
+  const mobile = width < 600;
 
   const transactions: Transaction[] = useMemo(() => [
     ...income.map((item) => ({ id: String(item.id), title: item.description, amount: item.amount, type: 'income' as TransactionType, category: item.category, occurredAt: item.date })),
@@ -118,7 +120,7 @@ export function TransactionsScreen() {
       <View style={styles.searchWrap}>
         <TextInput value={query} onChangeText={setQuery} placeholder="Search transactions..." placeholderTextColor={colors.mutedText} style={styles.search} />
       </View>
-      <View style={styles.filters}>
+      <View style={[styles.filters, mobile && styles.filtersMobile]}>
         <SelectField label="Type" value={typeFilter} options={[{ label: 'All Types', value: 'all' }, { label: 'Income', value: 'income' }, { label: 'Expense', value: 'expense' }]} onChange={(v) => setTypeFilter(v as FilterType)} />
         <SelectField label="Category" value={categoryFilter} options={allCategories} onChange={setCategoryFilter} />
       </View>
@@ -165,6 +167,7 @@ const styles = StyleSheet.create({
   searchWrap: { marginBottom: spacing.md },
   search: { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: radii.sm, color: colors.text, minHeight: 46, paddingHorizontal: spacing.md },
   filters: { gap: spacing.sm },
+  filtersMobile: { flexDirection: 'row', gap: spacing.sm },
   row: { alignItems: 'center', borderBottomColor: colors.border, borderBottomWidth: 1, flexDirection: 'row', paddingVertical: spacing.md },
   icon: { alignItems: 'center', borderRadius: 20, height: 38, justifyContent: 'center', marginRight: spacing.sm, width: 38 },
   rowMain: { flex: 1 },
